@@ -1,1 +1,7 @@
-from window import *
+import tkinter as tk
+from window import Window
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    window = Window(root)
+    root.mainloop()

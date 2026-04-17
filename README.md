@@ -39,7 +39,10 @@ cd source
 ```
 python3 main.py
 ```
-
+or
+```
+uv run main.py
+```
 
 ## How to Use
 When the window opens, all you have to do is put the values in the right entry boxes, select the right value in the comboboxes, select the right checkbuttons, then click the submit button and see the effective stats, possible scores, and the final CR.

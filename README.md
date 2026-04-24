@@ -48,7 +48,7 @@ uv run main.py
 When the window opens, all you have to do is put the values in the right entry boxes, select the right value in the comboboxes, select the right checkbuttons, then click the submit button and see the effective stats, possible scores, and the final CR.
 
 ## Reasons For Creating This Project
-1. My biggest problem with CR calculators that are publicly available are that they require an expected CR, which can alter the final CR. So I decided to make a CR calculator that calculates the expected CR at the start of the calculation based on the stats given, then updates the CR by recalculating based on the new stats at the end of each step, since the rules on creating a D&D monster requires an expected CR at a few steps.
+1. My biggest problem with CR calculators that are publicly available are that they require an expected CR, which can alter the final CR. So I decided to make a CR calculator that calculates the expected CR at the start of the calculation based on the stats given, then updates the CR by recalculating based on the new stats at the end of the calculation, repeating the steps if the two CRs are different, since the rules on creating a D&D monster requires an expected CR at a few steps.
 2. My second reason for making this is because this is my first personal project for Boot.Dev and since I was already reading the rules on monster creation for D&D, it was the perfect opportunity to make this project.
 
 ## Reasons For Not Including Some Monster Features

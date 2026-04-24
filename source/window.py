@@ -235,7 +235,7 @@ class Window:
 
 
 
-        self.button_submit = tk.Button(master = self.frame_buttons, text = "Submit", command = lambda: final_results(self, self.entry_ac.get(), self.label_hp_result.cget("text"), self.entry_ab_or_sdc.get(), self.label_damage_result.cget("text"), self.resistance_or_immunity_type.get(), self.immunity_check_type.get(), self.vulnerability_check_type.get(), self.feature_types, self.fly_and_range_type.get(), self.save_bonuses_type.get(), self.entry_con_modifier.get()))
+        self.button_submit = tk.Button(master = self.frame_buttons, text = "Submit", command = lambda: final_results(self, self.entry_ac.get(), self.entry_ac.get(), self.label_hp_result.cget("text"), self.label_hp_result.cget("text"), self.entry_ab_or_sdc.get(), self.entry_ab_or_sdc.get(), self.label_damage_result.cget("text"), self.label_damage_result.cget("text"), self.resistance_or_immunity_type.get(), self.immunity_check_type.get(), self.vulnerability_check_type.get(), self.feature_types, self.fly_and_range_type.get(), self.save_bonuses_type.get(), self.entry_con_modifier.get()))
         self.button_submit.grid(row = 0, column = 0)
         self.button_clear = tk.Button(master = self.frame_buttons, text = "Clear", command = lambda: reset_window(self))
         self.button_clear.grid(row = 0, column = 1)

@@ -1,4 +1,5 @@
 from decimal import Decimal, ROUND_HALF_UP
+import math
 
 def hit_dice_type(window, size):
     parts = window.label_con_addition.cget("text").split(" ", maxsplit=1)
@@ -21,21 +22,18 @@ def hit_dice_type(window, size):
             hit_dice = "d4"
     window.label_con_addition.configure(text = f"{hit_dice} {hp_modifier}")
 
+def int_check(value):
+    if value is None or value == "":
+        return 0
+    else:
+        try:
+            return int(value)
+        except ValueError:
+            return 0
+
 def hp_modifier(window, con_modifier, hit_dice_amount):
-    if con_modifier is None or con_modifier == "":
-        con_modifier = 0
-    else:
-        try:
-            con_modifier = int(con_modifier)
-        except ValueError:
-            con_modifier = 0
-    if hit_dice_amount is None or hit_dice_amount == "":
-        hit_dice_amount = 0
-    else:
-        try:
-            hit_dice_amount = int(hit_dice_amount)
-        except ValueError:
-            hit_dice_amount = 0
+    con_modifier = int_check(con_modifier)
+    hit_dice_amount = int_check(hit_dice_amount)
     parts = window.label_con_addition.cget("text").split()
     hit_dice_type = parts[0] if len(parts) > 0 else "d4"
     final_modifier = con_modifier * hit_dice_amount
@@ -47,13 +45,7 @@ def hp_modifier(window, con_modifier, hit_dice_amount):
     window.label_con_addition.configure(text = f"{hit_dice_type} {operation} {final_modifier}")
 
 def average_hp(window, hit_dice_amount):
-    if hit_dice_amount is None or hit_dice_amount == "":
-        hit_dice_amount = 0
-    else:
-        try:
-            hit_dice_amount = int(hit_dice_amount)
-        except ValueError:
-            hit_dice_amount = 0
+    hit_dice_amount = int_check(hit_dice_amount)
     parts = window.label_con_addition.cget("text").split()
     hit_dice_type = parts[0] if len(parts) > 0 else "d4"
     operation = parts[1] if len(parts) > 1 else "+"
@@ -80,32 +72,14 @@ def average_hp(window, hit_dice_amount):
         average_hp = hit_dice_amount * hit_dice_hp + hp_modifier
     else:
         average_hp = hit_dice_amount * hit_dice_hp - hp_modifier
-    window.label_hp_result.configure(text = f"{int(average_hp // 1)}")
+    window.label_hp_result.configure(text = f"{math.floor(average_hp)}")
 
 def average_damage(window, damage_1, damage_2, damage_3):
-    if damage_1 is None or damage_1 == "":
-        damage_1 = 0
-    else:
-        try:
-            damage_1 = int(damage_1)
-        except ValueError:
-            damage_1 = 0
-    if damage_2 is None or damage_2 == "":
-        damage_2 = 0
-    else:
-        try:
-            damage_2 = int(damage_2)
-        except ValueError:
-            damage_2 = 0
-    if damage_3 is None or damage_3 == "":
-        damage_3 = 0
-    else:
-        try:
-            damage_3 = int(damage_3)
-        except ValueError:
-            damage_3 = 0
-    average_damage = (damage_1 + damage_2 + damage_3) // 3
-    window.label_damage_result.configure(text = f"{int(average_damage)}")
+    damage_1 = int_check(damage_1)
+    damage_2 = int_check(damage_2)
+    damage_3 = int_check(damage_3)
+    average_damage = (damage_1 + damage_2 + damage_3) / 3
+    window.label_damage_result.configure(text = f"{math.floor(average_damage)}")
 
 def decrement_cr(cr):
     cr_levels = [0, 0.125, 0.25, 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]
@@ -248,165 +222,88 @@ def cr_calculation(window, ac, hp, ab_or_sdc, dpr):
         final_cr = average_cr.quantize(Decimal("1"), rounding = ROUND_HALF_UP)
     return final_cr
 
-def resistances_immunities_and_vulnerabilities(window, ac, hp, effective_hp, ab_or_sdc, dpr, cr, resist_or_immune, immune_check, vulnerable, repeat = 0):
-    new_effective_hp = hp
+def resistances_immunities_and_vulnerabilities(hp, cr, resist_or_immune, immune_check, vulnerable):
     if resist_or_immune == "yes":
         if immune_check == "resistance":
             if cr <= 4:
-                new_effective_hp *= 2
+                hp *= 2
             elif cr >= 5 and cr <= 10:
-                new_effective_hp *= 1.5
+                hp *= 1.5
             elif cr >= 11 and cr <= 16:
-                new_effective_hp *= 1.25
+                hp *= 1.25
         elif immune_check == "immunity":
             if cr <= 10:
-                new_effective_hp *= 2
+                hp *= 2
             elif cr >= 11 and cr <= 16:
-                new_effective_hp *= 1.5
+                hp *= 1.5
             elif cr >= 17:
-                new_effective_hp *= 1.25
+                hp *= 1.25
     if vulnerable == "yes":
-        new_effective_hp //= 2
-    new_cr = cr_calculation(window, ac, (new_effective_hp // 1), ab_or_sdc, dpr)
-    if new_cr != cr:
-        repeat += 1
-        if repeat >= 10:
-            if new_cr >= cr:
-                return new_effective_hp // 1, new_cr
-            else:
-                return effective_hp // 1, cr
-        else:
-            return resistances_immunities_and_vulnerabilities(window, ac, hp, new_effective_hp, ab_or_sdc, dpr, new_cr, resist_or_immune, immune_check, vulnerable, repeat)
-    return new_effective_hp // 1, new_cr
+        hp //= 2
+    return math.floor(hp)
 
-def features(window, ac, hp, effective_hp, ab_or_sdc, dpr, cr, feature, repeat = 0):
-    effective_ac = ac
-    new_effective_hp = hp
-    effective_ab_or_sdc = ab_or_sdc
-    effective_dpr = dpr
+def features(window, ac, hp, effective_hp, ab_or_sdc, dpr, cr, feature):
     match feature:
         case "Aggressive":
-            effective_dpr += 2
+            dpr += 2
         case "Ambusher" | "Pack Tactics":
             if window.offence_type.get() == "ab":
-                effective_ab_or_sdc += 1
+                ab_or_sdc += 1
         case "Avoidance" | "Constrict" | "Parry" | "Stench" | "Web":
-            effective_ac += 1
+            ac += 1
         case "Blood Frenzy":
             if window.offence_type.get() == "ab":
-                effective_ab_or_sdc += 4
+                ab_or_sdc += 4
         case "Damage Transfer":
-            new_effective_hp *= 2
-            effective_dpr += hp // 3
+            effective_hp *= 2
+            dpr += hp / 3
         case "Frightful Presence" | "Horrifying Visage":
             if cr <= 10:
-                new_effective_hp *= 1.25
-                new_cr = cr_calculation(window, ac, (new_effective_hp // 1), ab_or_sdc, dpr)
-                if new_cr != cr:
-                    repeat += 1
-                    if repeat >= 10:
-                        if new_cr >= cr:
-                            return effective_ac, new_effective_hp // 1, effective_ab_or_sdc, effective_dpr, new_cr
-                        else:
-                            return effective_ac, effective_hp // 1, effective_ab_or_sdc, effective_dpr, cr
-                    else:
-                        return features(window, ac, hp, new_effective_hp, ab_or_sdc, dpr, new_cr, feature, repeat)
-                return effective_ac, new_effective_hp // 1, effective_ab_or_sdc, effective_dpr, new_cr
+                effective_hp *= 1.25
         case "Legendary Resistance":
-            amount = window.entry_features[9].get()
-            if amount is None or amount == "":
-                amount = 0
-            else:
-                try:
-                    amount = int(amount)
-                except ValueError:
-                    amount = 0
-                if cr <= 4:
-                    new_effective_hp += 10 * amount
-                elif cr >= 5 and cr <= 10:
-                    new_effective_hp += 20 * amount
-                elif cr >= 11:
-                    new_effective_hp += 30 * amount
-                new_cr = cr_calculation(window, ac, (new_effective_hp // 1), ab_or_sdc, dpr)
-                if new_cr != cr:
-                    repeat += 1
-                    if repeat >= 10:
-                        if new_cr >= cr:
-                            return effective_ac, new_effective_hp // 1, effective_ab_or_sdc, effective_dpr, new_cr
-                        else:
-                            return effective_ac, effective_hp // 1, effective_ab_or_sdc, effective_dpr, cr
-                    else:
-                        return features(window, ac, hp, new_effective_hp, ab_or_sdc, dpr, new_cr, feature, repeat)
-                return effective_ac, new_effective_hp // 1, effective_ab_or_sdc, effective_dpr, new_cr
+            amount = int_check(window.entry_features[9].get())
+            if cr <= 4:
+                effective_hp += 10 * amount
+            elif cr >= 5 and cr <= 10:
+                effective_hp += 20 * amount
+            elif cr >= 11:
+                effective_hp += 30 * amount
         case "Magic Resistance" | "Superior Invisibility":
-            effective_ac += 2
+            ac += 2
         case "Nimble Escape":
-            effective_ac += 4
+            ac += 4
             if window.offence_type.get() == "ab":
-                effective_ab_or_sdc += 4
+                ab_or_sdc += 4
         case "Possession":
-            new_effective_hp *= 2
+            effective_hp *= 2
         case "Regeneration":
-            amount = window.entry_features[16].get()
-            if amount is None or amount == "":
-                amount = 0
-            else:
-                try:
-                    amount = int(amount)
-                except ValueError:
-                    amount = 0
-            new_effective_hp += 3 * amount
+            amount = int_check(window.entry_features[16].get())
+            effective_hp += 3 * amount
         case "Relentless" | "Undead Fortitude":
             if cr <= 4:
-                new_effective_hp += 7
+                effective_hp += 7
             elif cr >= 5 and cr <= 10:
-                new_effective_hp += 14
+                effective_hp += 14
             elif cr >= 11 and cr <= 16:
-                new_effective_hp += 21
+                effective_hp += 21
             elif cr >= 17:
-                new_effective_hp += 28
-            new_cr = cr_calculation(window, ac, (new_effective_hp // 1), ab_or_sdc, dpr)
-            if new_cr != cr:
-                repeat += 1
-                if repeat >= 10:
-                    if new_cr >= cr:
-                        return effective_ac, new_effective_hp // 1, effective_ab_or_sdc, effective_dpr, new_cr
-                    else:
-                        return effective_ac, effective_hp // 1, effective_ab_or_sdc, effective_dpr, cr
-                else:
-                    return features(window, ac, hp, new_effective_hp, ab_or_sdc, dpr, new_cr, feature, repeat)
-            return effective_ac, new_effective_hp // 1, effective_ab_or_sdc, effective_dpr, new_cr
+                effective_hp += 28
         case "Shadow Stealth":
-            effective_ac += 4
-    cr = cr_calculation(window, effective_ac, (new_effective_hp // 1), effective_ab_or_sdc, effective_dpr)
-    return effective_ac, new_effective_hp, effective_ab_or_sdc, effective_dpr, cr
+            ac += 4
+    return ac, math.floor(effective_hp), ab_or_sdc, math.floor(dpr)
 
-def flying_speed(window, ac, effective_ac, hp, ab_or_sdc, dpr, cr, repeat = 0):
-    new_effective_ac = ac
+def flying_speed(ac, cr):
     if cr <= 10:
-        new_effective_ac += 2
-        new_cr = cr_calculation(window, new_effective_ac, hp, ab_or_sdc, dpr)
-        if new_cr != cr:
-            repeat += 1
-            if repeat >= 10:
-                if new_cr >= cr:
-                    return new_effective_ac, new_cr
-                else:
-                    return effective_ac, cr
-            else:
-                return flying_speed(window, ac, new_effective_ac, hp, ab_or_sdc, dpr, new_cr, repeat)
-        return new_effective_ac, new_cr
-    return effective_ac, cr
+        ac += 2
+    return ac
 
-def saving_throw_bonuses(window, ac, hp, ab_or_sdc, dpr, save):
-    effective_ac = ac
+def saving_throw_bonuses(ac, save):
     match save:
         case "3-4":
-            effective_ac += 2
+            ac += 2
         case "5+":
-            effective_ac += 4
-    new_cr = cr_calculation(window, effective_ac, hp, ab_or_sdc, dpr)
-    return effective_ac, new_cr
+            ac += 4
+    return ac
 
 def score_calculation(window, con_mod, ab_or_sdc_mod, pb):
     con_score = con_mod * 2 + 10
@@ -445,86 +342,72 @@ def score_calculation(window, con_mod, ab_or_sdc_mod, pb):
             wis_scores = f"{wis_score}-{wis_score + 1}"
     return con_scores, attack_scores, cha_scores, wis_scores
 
-def final_results(window, ac, hp, ab_or_sdc, dpr, resist_or_immune, immune_check, vulnerable, feature_list, flying, save, con_mod):
-    if ac is None or ac == "":
-        ac = 0
-    else:
-        try:
-            ac = int(ac)
-        except ValueError:
-            ac = 0
-    if hp is None or hp == "":
-        hp = 0
-    else:
-        try:
-            hp = int(hp)
-        except ValueError:
-            hp = 0
-    if ab_or_sdc is None or ab_or_sdc == "":
-        ab_or_sdc = 0
-    else:
-        try:
-            ab_or_sdc = int(ab_or_sdc)
-        except ValueError:
-            ab_or_sdc = 0
-    if dpr is None or dpr == "":
-        dpr = 0
-    else:
-        try:
-            dpr = int(dpr)
-        except ValueError:
-            dpr = 0
-    if con_mod is None or con_mod == "":
-        con_mod = 0
-    else:
-        try:
-            con_mod = int(con_mod)
-        except ValueError:
-            con_mod = 0
-    effective_ac = ac
-    effective_hp = hp
-    effective_ab_or_sdc = ab_or_sdc
-    effective_dpr = dpr
-    cr = cr_calculation(window, ac, hp, ab_or_sdc, dpr)
+def final_results(window, ac, effective_ac, hp, effective_hp, ab_or_sdc, effective_ab_or_sdc, dpr, effective_dpr, resist_or_immune, immune_check, vulnerable, feature_list, flying, save, con_mod, repeat = 0):
+    ac = int_check(ac)
+    effective_ac = int_check(effective_ac)
+    hp = int_check(hp)
+    effective_hp = int_check(effective_hp)
+    ab_or_sdc = int_check(ab_or_sdc)
+    effective_ab_or_sdc = int_check(effective_ab_or_sdc)
+    dpr = int_check(dpr)
+    effective_dpr = int_check(effective_dpr)
+    con_mod = int_check(con_mod)
+    new_effective_ac = ac
+    new_effective_hp = hp
+    new_effective_ab_or_sdc = ab_or_sdc
+    new_effective_dpr = dpr
+    cr = cr_calculation(window, effective_ac, effective_hp, effective_ab_or_sdc, effective_dpr)
     if resist_or_immune == "yes" or vulnerable == "yes":
-        effective_hp, cr = resistances_immunities_and_vulnerabilities(window, effective_ac, effective_hp, effective_hp, effective_ab_or_sdc, effective_dpr, cr, resist_or_immune, immune_check, vulnerable)
+        new_effective_hp = resistances_immunities_and_vulnerabilities(new_effective_hp, cr, resist_or_immune, immune_check, vulnerable)
     for feature_var in feature_list:
         feature = feature_var.get()
         if feature != "":
-            effective_ac, effective_hp, effective_ab_or_sdc, effective_dpr, cr = features(window, effective_ac, effective_hp, effective_hp, effective_ab_or_sdc, effective_dpr, cr, feature)
+            new_effective_ac, new_effective_hp, new_effective_ab_or_sdc, new_effective_dpr = features(window, new_effective_ac, hp, new_effective_hp, new_effective_ab_or_sdc, new_effective_dpr, cr, feature)
     if flying == "yes":
-        effective_ac, cr = flying_speed(window, effective_ac, effective_ac, effective_hp, effective_ab_or_sdc, effective_dpr, cr)
+        new_effective_ac = flying_speed(new_effective_ac, cr)
     if save == "3-4" or save == "5+":
-        effective_ac, cr = saving_throw_bonuses(window, effective_ac, effective_hp, effective_ab_or_sdc, effective_dpr, save)
-    window.label_effective_ac_result.configure(text = f"{int(effective_ac)}")
-    window.label_effective_hp_result.configure(text = f"{int(effective_hp)}")
-    window.label_effective_ab_or_sdc_result.configure(text = f"{int(effective_ab_or_sdc)}")
-    window.label_effective_damage_result.configure(text = f"{int(effective_dpr)}")
-    if cr <= 4:
+        new_effective_ac = saving_throw_bonuses(new_effective_ac, save)
+    new_cr = cr_calculation(window, new_effective_ac, new_effective_hp, new_effective_ab_or_sdc, new_effective_dpr)
+    if new_cr != cr:
+        repeat += 1
+        if repeat >= 10:
+            if new_cr < cr:
+                new_effective_ac = effective_ac
+                new_effective_hp = effective_hp
+                new_effective_ab_or_sdc = effective_ab_or_sdc
+                new_effective_dpr = effective_dpr
+                new_cr = cr
+        else:
+            return final_results(window, ac, new_effective_ac, hp, new_effective_hp, ab_or_sdc, new_effective_ab_or_sdc, dpr, new_effective_dpr, resist_or_immune, immune_check, vulnerable, feature_list, flying, save, con_mod, repeat)
+    window.label_effective_ac_result.configure(text = f"{int(new_effective_ac)}")
+    window.label_effective_hp_result.configure(text = f"{int(new_effective_hp)}")
+    window.label_effective_ab_or_sdc_result.configure(text = f"{int(new_effective_ab_or_sdc)}")
+    window.label_effective_damage_result.configure(text = f"{int(new_effective_dpr)}")
+    if new_cr <= 4:
         pb = 2
-    elif cr >= 5 and cr <= 8:
+    elif new_cr >= 5 and new_cr <= 8:
         pb = 3
-    elif cr >= 9 and cr <= 12:
+    elif new_cr >= 9 and new_cr <= 12:
         pb = 4
-    elif cr >= 13 and cr <= 16:
+    elif new_cr >= 13 and new_cr <= 16:
         pb = 5
-    elif cr >= 17 and cr <= 20:
+    elif new_cr >= 17 and new_cr <= 20:
         pb = 6
-    elif cr >= 21 and cr <= 24:
+    elif new_cr >= 21 and new_cr <= 24:
         pb = 7
-    elif cr >= 25 and cr <= 28:
+    elif new_cr >= 25 and new_cr <= 28:
         pb = 8
-    elif cr >= 29 and cr <= 30:
+    elif new_cr >= 29 and new_cr <= 30:
         pb = 9
     window.label_proficiency_bonus_result.configure(text = f"+{int(pb)}")
-    match cr:
+    match new_cr:
         case 0.125:
-            cr = "1/8"
+            new_cr = "1/8"
         case 0.25:
-            cr = "1/4"
+            new_cr = "1/4"
         case 0.5:
-            cr = "1/2"
-    window.label_final_cr_result.configure(text = f"{cr}")
+            new_cr = "1/2"
+    window.label_final_cr_result.configure(text = f"{new_cr}")
     con_scores, attack_scores, cha_scores, wis_scores = score_calculation(window, con_mod, ab_or_sdc, pb)
     window.label_possible_con_result.configure(text = f"{con_scores}")
     window.label_possible_attack_stat_result.configure(text = f"{attack_scores}")
